@@ -8,12 +8,13 @@
 
 #include "devices/timer.h"
 
+#include "projects/automated_warehouse/automated_warehouse.h"
 #include "projects/automated_warehouse/aw_manager.h"
 
 struct robot* robots;
 
 // test code for central control node thread
-void test_cnt(){
+void test_cnt(void){
         while(1){
                 print_map(robots, 4);
                 thread_sleep(1000);

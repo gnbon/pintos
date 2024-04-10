@@ -7,8 +7,8 @@
 
 extern struct list blocked_threads;
 
-void block_thread();
+void block_thread(void);
 
-void unblock_threads();
+void unblock_threads(void);
 
 #endif

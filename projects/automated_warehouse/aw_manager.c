@@ -95,6 +95,6 @@ void print_map(struct robot* __robots, int __number_of_robots){
  * A function increasing 1 step
  * It must be called before unblocking and after print_map
  */
-void increase_step(){
+void increase_step(void){
     step++;
 }
