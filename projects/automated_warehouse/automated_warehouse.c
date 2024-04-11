@@ -19,7 +19,7 @@ void test_cnt(void){
         while(1){
                 print_map(robots, 4);
                 thread_sleep(1000);
-                block_thread();
+                unblock_threads();
         }
 }
 
@@ -83,8 +83,8 @@ int parse_args(char *task_list, pair *task_pair, int max_count) {
 }
 
 int initialize_robot(int num_robots, pair *task_pair) {
-        struct robot* robots = malloc(sizeof(struct robot) * num_robots);
-        tid_t* threads = malloc(sizeof(tid_t) * num_robots);
+        robots = malloc(sizeof(struct robot) * num_robots); // TODO: destroy this
+        tid_t* threads = malloc(sizeof(tid_t) * num_robots); // TODO: destroy this
 
         for (int i = 0; i < num_robots; i++) {
                 char rname[3];
@@ -96,6 +96,16 @@ int initialize_robot(int num_robots, pair *task_pair) {
                         printf("Thread creation failed\n");
                         return -1;
                 }
+        }
+
+        return 0;
+}
+
+init_automated_warehouse_manager(int num_robots, struct robot* robots) {
+        tid_t* cnt_thread = thread_create("CNT", 0, &test_cnt, NULL);
+        if (cnt_thread == TID_ERROR) {
+                printf("Thread creation failed\n");
+                return -1;
         }
 
         return 0;
@@ -122,5 +132,9 @@ void run_automated_warehouse(char **argv)
         }
 
         // if you want, you can use main thread as a central control node
-        
+        res = init_automated_warehouse_manager(num_robots, robots);
+        if (res < 0) {
+                printf("Central control node initialization failed\n");
+                return;
+        }
 }
