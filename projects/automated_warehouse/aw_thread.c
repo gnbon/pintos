@@ -16,13 +16,13 @@
 struct list blocked_threads;
 
 /**
- * A function unblocking all blocked threads in "blocked_threads" 
+ * A function blocking the current thread
  * It must be called by robot threads
  */
 void block_thread(){
-    // You must implement this
-
-    // Code below is example
+    struct thread *cur;
+    cur = thread_current();
+    list_push_back(&blocked_threads, &cur->elem);
     enum intr_level old_level;
     old_level = intr_disable ();
     thread_block ();
@@ -34,5 +34,10 @@ void block_thread(){
  * It must be called by central control thread
  */
 void unblock_threads(){
-    // you must implement this
+    enum intr_level old_level;
+    old_level = intr_disable ();
+    while (!list_empty (&blocked_threads)) {
+        thread_unblock (list_entry (list_pop_front (&blocked_threads), struct thread, elem));
+    }
+    intr_set_level (old_level);
 }
