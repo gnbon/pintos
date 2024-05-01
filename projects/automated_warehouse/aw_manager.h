@@ -18,6 +18,11 @@
 #define ROW_W 5
 #define COL_W 5
 
+#define ROW_MIN 0
+#define ROW_MAX 5
+#define COL_MIN 0
+#define COL_MAX 6
+
 extern unsigned int step;
 extern const char thread_status[4][10];
 extern const char map_draw_default[6][7];

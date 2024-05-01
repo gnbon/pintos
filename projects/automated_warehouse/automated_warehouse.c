@@ -11,14 +11,43 @@
 
 #include "projects/automated_warehouse/automated_warehouse.h"
 #include "projects/automated_warehouse/aw_manager.h"
+#include "projects/automated_warehouse/aw_message.h"
 
 struct robot* robots;
 
+/** message boxes from central control node to each robot */
+struct messsage_box* boxes_from_central_control_node;
+/** message boxes from robots to central control node */
+struct messsage_box* boxes_from_robots;
+
 // test code for central control node thread
-void test_cnt(void){
+void test_cnt(void *aux){
+        int num_robots = *((int *)aux);
+        bool *recieved = malloc(sizeof(bool) * num_robots); // TODO: destroy this
+        for (int i = 0; i < num_robots; i++) {
+                recieved[i] = false;
+        }
+
         while(1){
-                print_map(robots, 4);
+                print_map(robots, num_robots);
                 thread_sleep(1000);
+                bool recieved_all = false;
+                while (!recieved_all) {
+                        for (int i = 0; i < num_robots; i++) {
+                                if (recieved[i] == false) {
+                                        struct message msg;
+                                        int res = recv_message_from_robot(i, &msg);
+                                        if (res == 0) {
+                                                recieved[i] = true;
+                                                // enum command cmd = pathfind_robot(&robots[i]);
+                                                // set_cmd(&msg, cmd);
+                                                send_message_to_robot(i, &msg);
+                                        }
+                                }
+                        }
+                }
+                
+                increase_step();
                 unblock_threads();
         }
 }
@@ -27,9 +56,18 @@ void test_cnt(void){
 void test_thread(void* aux){
         int idx = *((int *)aux);
         int test = 0;
+        int res = 0;
+        struct message msg;
         while(1){
                 printf("thread %d : %d\n", idx, test++);
-                thread_sleep(idx * 1000);
+                
+                res = recv_message_from_central_control_node(idx, &msg);
+                if(res == 0){
+                        moveRobot(&robots[idx], &msg);
+                        send_message_to_central_control_node(idx, &msg);
+
+                }
+                thread_sleep((idx + 1) * 1000);
         }
 }
 
@@ -82,27 +120,29 @@ int parse_args(char *task_list, pair *task_pair, int max_count) {
         return 0;
 }
 
-int initialize_robot(int num_robots, pair *task_pair) {
+int initialize_robots(int num_robots, pair *task_pair) {
         robots = malloc(sizeof(struct robot) * num_robots); // TODO: destroy this
         tid_t* threads = malloc(sizeof(tid_t) * num_robots); // TODO: destroy this
+        char * rnames = malloc(sizeof(char) * num_robots * 3); // TODO: destroy this
+        int * robot_idxs = malloc(sizeof(int) * num_robots); // TODO: destroy this
 
         for (int i = 0; i < num_robots; i++) {
-                char rname[3];
-                int idx = i + 1;
-                snprintf(rname, 3, "R%d", i + 1);
-                setRobot(&robots[i], rname, ROW_W, COL_W, 0, 0); // TODO : set robot position and payload
-                threads[i] = thread_create(rname, 0, &test_thread, &idx);
+                robot_idxs[i] = i;
+                snprintf(rnames, 3, "R%d", i + 1);
+                setRobot(&robots[i], rnames, ROW_W, COL_W, 0, 0, &task_pair[i]);
+                threads[i] = thread_create(rnames, 0, &test_thread, &robot_idxs[i]); // task 책임은 로봇한테 있다
                 if (threads[i] == TID_ERROR) {
                         printf("Thread creation failed\n");
                         return -1;
                 }
+                rnames += 3;
         }
 
         return 0;
 }
 
-init_automated_warehouse_manager(int num_robots, struct robot* robots) {
-        tid_t* cnt_thread = thread_create("CNT", 0, &test_cnt, NULL);
+int initialize_central_control_node(int num_robots) {
+        tid_t* cnt_thread = thread_create("CNT", 0, &test_cnt, &num_robots);
         if (cnt_thread == TID_ERROR) {
                 printf("Thread creation failed\n");
                 return -1;
@@ -125,16 +165,21 @@ void run_automated_warehouse(char **argv)
                 return;
         }
 
-        res = initialize_robot(num_robots, task_pair);
+        res = initialize_message_boxes(num_robots);
         if (res < 0) {
-                printf("Robot initialization failed\n");
+                printf("Message box initialization failed\n");
                 return;
         }
 
-        // if you want, you can use main thread as a central control node
-        res = init_automated_warehouse_manager(num_robots, robots);
+        res = initialize_central_control_node(num_robots);
         if (res < 0) {
                 printf("Central control node initialization failed\n");
+                return;
+        }
+
+        res = initialize_robots(num_robots, task_pair);
+        if (res < 0) {
+                printf("Robot initialization failed\n");
                 return;
         }
 }
