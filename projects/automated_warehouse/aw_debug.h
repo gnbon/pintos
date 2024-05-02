@@ -1,9 +1,10 @@
 #ifndef _PROJECTS_PROJECT1_DEBUG_H__
 #define _PROJECTS_PROJECT1_DEBUG_H__
 
-#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#ifdef DEBUG
+#ifdef AW_DEBUG
 #define DEBUG_MODE 1
 #else
 #define DEBUG_MODE 0
@@ -30,8 +31,8 @@
 #define DEBUG_PRINT(type, component, format, ...) \
     do { \
         if (DEBUG_MODE) { \
-            fprintf(stderr, "%s[%s] %s:%d: " format "%s\n", \
-                type, component, __FILE__, __LINE__, __VA_ARGS__, COLOR_RESET); \
+            printf("[%s](%s) " format " %s:%d%s\n", \
+                type, component, __VA_ARGS__, __FILE__, __LINE__, COLOR_RESET); \
         } \
     } while (0)
 
@@ -52,8 +53,8 @@
 
 /* Show a prefixed "doing something" message. */
 
-#define ACT(component, format, ...) \
-    DEBUG_PRINT(COLOR_CYAN "ACT", component, format, ##__VA_ARGS__)
+#define INFO(component, format, ...) \
+    DEBUG_PRINT(COLOR_CYAN "INFO", component, format, ##__VA_ARGS__)
 
 
 # endif

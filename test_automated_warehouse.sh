@@ -10,7 +10,7 @@ cd /home/vagrant/pintos/threads
 echo -e "${GREEN}[+] Successfully changed directory${NC}"
 
 echo -e "${BLUE}[*] Starting build process${NC}"
-make
+make AW_DEBUG=1
 if [ $? -eq 0 ]; then
 echo -e "${GREEN}[+] Build process completed successfully${NC}"
 else
