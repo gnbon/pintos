@@ -55,16 +55,19 @@ extern struct messsage_box* boxes_from_robots;
 
 int NUM_ROBOTS;
 
+enum MessageEndpoint {
+    ROBOT,
+    CENTRAL_CONTROL
+};
+
+/* 메시지 전송 함수 */
+int send_message(int robotIdx, struct message* msg, enum MessageEndpoint endpoint);
+
+/* 메시지 수신 함수 */
+int recv_message(int robotIdx, struct message* msg, enum MessageEndpoint direction);
+
 /** initialize message boxes */
 int initialize_message_boxes(int num_robots);
-/** send message from robot to central control node */
-int send_message_to_central_control_node(int robotIdx, struct message* msg);
-/** send message from central control node to robot */
-int send_message_to_robot(int robotIdx, struct message* msg);
-/** receive message from robot */
-int recv_message_from_robot(int robotIdx, struct message* msg);
-/** receive message from central control node */
-int recv_message_from_central_control_node(int robotIdx, struct message* msg);
 
 void set_cmd(struct message* msg, enum command cmd);
 
