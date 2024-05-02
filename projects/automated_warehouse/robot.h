@@ -6,10 +6,9 @@
 #include "projects/automated_warehouse/aw_message.h"
 
 typedef struct {
-    char cargo; // 0 1 2
-    char loading_dock; // A B C
-    bool is_loaded;
-} pair;
+    char current; // 0 1 2
+    char required; // A B C
+} payload;
 
 /**
  * A Structure representing robot
@@ -20,10 +19,9 @@ struct robot {
     int col;
     int required_payload;
     int current_payload;
-    pair* task;
 };
 
-void setRobot(struct robot* _robot, const char* name, int row, int col, int required_payload, int current_payload, pair* task);
+void setRobot(struct robot* _robot, const char* name, int row, int col, int required_payload, int current_payload);
 
 int moveRobot(struct robot* robots, int idx, int number_of_robots, struct message* msg);
 

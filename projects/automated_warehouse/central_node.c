@@ -56,12 +56,12 @@ Point dequeue(Queue* queue) {
 #define DEBUG(...) printf(__VA_ARGS__)
 
 int find_path(struct robot* robot) {
-    if (robot->task->is_loaded) {
-        if (map_draw_default[robot->row][robot->col] == robot->task->loading_dock) {
+    if (is_loaded(robot)) {
+        if (map_draw_default[robot->row][robot->col] == robot->current_payload) {
             return CMD_NOP;
         }
     } else {
-        if (map_draw_default[robot->row][robot->col] == robot->task->cargo) {
+        if (map_draw_default[robot->row][robot->col] == robot->current_payload) {
             return CMD_NOP;
         }
     }
@@ -94,13 +94,13 @@ int find_path(struct robot* robot) {
             }
 
             if (map_draw_default[nr][nc] >= '0' && map_draw_default[nr][nc] <= '9') {
-                if (robot->task->cargo != map_draw_default[nr][nc]) {
+                if (robot->current_payload != map_draw_default[nr][nc]) {
                     continue;
                 }
             }
 
             if (map_draw_default[nr][nc] >= 'A' && map_draw_default[nr][nc] <= 'Z' && map_draw_default[nr][nc] != 'W' && map_draw_default[nr][nc] != 'S') {
-                if (robot->task->loading_dock != map_draw_default[nr][nc]) {
+                if (robot->current_payload != map_draw_default[nr][nc]) {
                     continue;
                 }
             }
@@ -117,8 +117,8 @@ int find_path(struct robot* robot) {
     bool found = false;
     for (int i = 0; i < ROW_MAX; i++) {
         for (int j = 0; j < COL_MAX; j++) {
-            if (visited[i][j] && (map_draw_default[i][j] == robot->task->cargo || 
-                                map_draw_default[i][j] == robot->task->loading_dock)) {
+            if (visited[i][j] && (map_draw_default[i][j] == robot->current_payload || 
+                                map_draw_default[i][j] == robot->required_payload)) {
                 target.row = i;
                 target.col = j;
                 found = true;

@@ -39,19 +39,16 @@ void test_cnt(void){
                 while (!received_all) {
                         received_all = true;
                         for (int i = 0; i < num_robots; i++) {
-                                DEBUG("Checking robot %d\n", i);
-                                if (received[i]) {
+                                if (received[i]) {      
                                         continue;
                                 }
                                 received_all = false;
-                                // not received yet
                                 struct message msg;
-                                int res = recv_message_from_robot(i, &msg);
-
+                                int res = recv_message(i, &msg, ROBOT);
                                 if (res == 0) {
                                         enum command cmd = find_path(&robots[i]);
                                         set_cmd(&msg, cmd);
-                                        send_message_to_robot(i, &msg);
+                                        send_message(i, &msg, CENTRAL_CONTROL);
                                         received[i] = true;
                                 } 
                                 
@@ -72,22 +69,21 @@ void test_thread(void* aux){
         int res = 0;
         struct message msg;
         while(1){
+                memset(&msg, 0, sizeof(struct message));
                 printf("thread %d : %d\n", idx, test++);
                 
-                res = recv_message_from_central_control_node(idx, &msg);
+                res = recv_message(idx, &msg, CENTRAL_CONTROL);
                 if(res == 0){
                         moveRobot(robots, idx, num_robots, &msg);
-                        send_message_to_central_control_node(idx, &msg);
-
+                        send_message(idx, &msg, ROBOT);
                 }
                 block_thread();
-                // thread_sleep((idx + 1) * 1000);
         }
 }
 
-int parse_args(char *task_list, pair *task_pair) {
+int parse_args(char *payload_list, payload *payloads) {
         char *saveptr;
-        char *token = strtok_r(task_list, ":", &saveptr);
+        char *token = strtok_r(payload_list, ":", &saveptr);
         int count = 0;
 
         while (token != NULL) {
@@ -114,21 +110,21 @@ int parse_args(char *task_list, pair *task_pair) {
                         return -4;
                 }
 
-                task_pair[count].cargo = number;
-                task_pair[count].loading_dock = letter;
+                payloads[count].current = number;
+                payloads[count].required = letter;
                 count++;
 
                 token = strtok_r(NULL, ":", &saveptr);
         }
 
         for (int i = 0; i < count; i++) {
-                printf("%c%c\n", task_pair[i].cargo, task_pair[i].loading_dock);
+                printf("%c%c\n", payloads[i].current, payloads[i].required);
         }
 
         return 0;
 }
 
-int initialize_robots(pair *task_pair) {
+int initialize_robots(payload *payloads) {
         robots = malloc(sizeof(struct robot) * num_robots); // TODO: destroy this
         tid_t* threads = malloc(sizeof(tid_t) * num_robots); // TODO: destroy this
         char * rnames = malloc(sizeof(char) * num_robots * 3); // TODO: destroy this
@@ -137,7 +133,7 @@ int initialize_robots(pair *task_pair) {
         for (int i = 0; i < num_robots; i++) {
                 robot_idxs[i] = i;
                 snprintf(rnames, 3, "R%d", i + 1);
-                setRobot(&robots[i], rnames, ROW_W, COL_W, 0, 0, &task_pair[i]);
+                setRobot(&robots[i], rnames, ROW_W, COL_W, payloads[i].current, payloads[i].required);
                 threads[i] = thread_create(rnames, 0, &test_thread, &robot_idxs[i]); // task 책임은 로봇한테 있다
                 if (threads[i] == TID_ERROR) {
                         printf("Thread creation failed\n");
@@ -164,15 +160,15 @@ void run_automated_warehouse(char **argv)
         init_automated_warehouse(argv); // do not remove this
 
         num_robots = atoi(argv[1]);
-        char *task_list = argv[2];
+        char *payload_list = argv[2];
 
-        pair* task_pair = malloc(sizeof(pair) * num_robots);
-        if (task_pair == NULL) {
+        payload* payloads = malloc(sizeof(payload) * num_robots);
+        if (payloads == NULL) {
                 printf("Memory allocation failed\n");
                 return -1;
         }
 
-        int res = parse_args(task_list, task_pair);
+        int res = parse_args(payload_list, payloads);
         if (res < 0) {
                 printf("Parsing failed\n");
                 return;
@@ -189,7 +185,7 @@ void run_automated_warehouse(char **argv)
                 printf("Central control node initialization failed\n");
                 return;
         }
-        res = initialize_robots(task_pair);
+        res = initialize_robots(payloads);
         if (res < 0) {
                 printf("Robot initialization failed\n");
                 return;

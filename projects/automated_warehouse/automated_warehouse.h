@@ -7,9 +7,9 @@ void test_cnt(void);
 
 void test_thread(void* aux);
 
-int parse_args(char *task_list, pair *task_pair);
+int parse_args(char *task_list, payload *payloads);
 
-int initialize_robots(pair *task_pair);
+int initialize_robots(payload *payloads);
 
 int initialize_central_control_node();
 

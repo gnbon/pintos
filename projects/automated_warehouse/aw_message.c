@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "projects/automated_warehouse/debug.h"
+#include "projects/automated_warehouse/aw_debug.h"
 #include "projects/automated_warehouse/aw_message.h"
 
 
@@ -70,7 +70,7 @@ int _send_message_to_central_control_node(int robotIdx, struct message* msg) {
         boxes_from_robots[robotIdx].msg.current_payload = msg->current_payload;
         boxes_from_robots[robotIdx].msg.required_payload = msg->required_payload;
         boxes_from_robots[robotIdx].dirtyBit = 1;
-        ACT("msg", "send robot2cnt row: %d, col: %d, current_payload: %d, required_payload: %d", boxes_from_robots[robotIdx].msg.row, boxes_from_robots[robotIdx].msg.row, boxes_from_robots[robotIdx].msg.current_payload, boxes_from_robots[robotIdx].msg.required_payload);
+        INFO("msg", "send robot2cnt row: %d, col: %d, current_payload: %d, required_payload: %d", boxes_from_robots[robotIdx].msg.row, boxes_from_robots[robotIdx].msg.row, boxes_from_robots[robotIdx].msg.current_payload, boxes_from_robots[robotIdx].msg.required_payload);
         return 0;
 }
 
@@ -83,7 +83,7 @@ int _send_message_to_robot(int robotIdx, struct message* msg) {
         boxes_from_central_control_node[robotIdx].msg.cmd = msg->cmd;
         boxes_from_central_control_node[robotIdx].dirtyBit = 1;
         
-        ACT("msg", "send cnt2robot cmd: %d", boxes_from_central_control_node[robotIdx].msg.cmd);
+        INFO("msg", "send cnt2robot cmd: %d", boxes_from_central_control_node[robotIdx].msg.cmd);
         return 0;
 }
 
@@ -96,7 +96,7 @@ int _recv_message_from_central_control_node(int robotIdx, struct message* msg) {
         msg->cmd = boxes_from_central_control_node[robotIdx].msg.cmd;
         boxes_from_central_control_node[robotIdx].dirtyBit = 0;
         
-        ACT("msg", "recv cnt2robot cmd: %d", msg->cmd);
+        INFO("msg", "recv cnt2robot cmd: %d", msg->cmd);
         return 0;
 }
 
@@ -112,7 +112,7 @@ int _recv_message_from_robot(int robotIdx, struct message* msg) {
         msg->required_payload = boxes_from_robots[robotIdx].msg.required_payload;
         boxes_from_robots[robotIdx].dirtyBit = 0;
 
-        ACT("msg", "recv robot2cnt row: %d, col: %d, current_payload: %d, required_payload: %d", msg->row, msg->col, msg->current_payload, msg->required_payload);
+        INFO("msg", "recv robot2cnt row: %d, col: %d, current_payload: %d, required_payload: %d", msg->row, msg->col, msg->current_payload, msg->required_payload);
         return 0;
 }
 
