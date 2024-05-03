@@ -45,7 +45,6 @@ Point dequeue(Queue* queue) {
     Point point = queue->data[queue->front];
     return point;
 }
-#define DEBUG(...) printf(__VA_ARGS__)
 
 bool c_isOutOfBound(int row, int col) {
     return row < ROW_MIN || row > ROW_MAX || col < COL_MIN || col > COL_MAX;

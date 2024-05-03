@@ -17,8 +17,6 @@
 struct robot* robots;
 int num_robots;
 
-#define DEBUG(...) printf(__VA_ARGS__)
-
 /** message boxes from central control node to each robot */
 struct messsage_box* boxes_from_central_control_node;
 /** message boxes from robots to central control node */
@@ -32,7 +30,6 @@ void test_cnt(void){
         }
 
         while(1){
-                DEBUG("print map\n");
                 print_map(robots, num_robots);
                 thread_sleep(100);
                 bool received_all = false;
