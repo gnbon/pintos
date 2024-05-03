@@ -44,9 +44,9 @@ void test_cnt(void){
                                 }
                                 received_all = false;
                                 struct message msg;
-                                int res = recv_message(i, &msg, ROBOT);
+                                int res = recv_message(i, &msg, CENTRAL_CONTROL);
                                 if (res == 0) {
-                                        enum command cmd = find_path(&robots[i]);
+                                        enum command cmd = find_path(&msg);
                                         set_cmd(&msg, cmd);
                                         send_message(i, &msg, CENTRAL_CONTROL);
                                         received[i] = true;
@@ -67,12 +67,26 @@ void test_thread(void* aux){
         int idx = *((int *)aux);
         int test = 0;
         int res = 0;
+        // initialize robot
         struct message msg;
+        msg.cmd = CMD_NOP;
+        moveRobot(robots, idx, num_robots, &msg);
+        send_message(idx, &msg, ROBOT);
+        for (int i = 0; i < idx * 5; i++) {
+                if (i != idx) {
+                        res = recv_message(idx, &msg, ROBOT);
+                                if(res == 0){
+                                msg.cmd = CMD_NOP;
+                                moveRobot(robots, idx, num_robots, &msg);
+                                send_message(idx, &msg, ROBOT);
+                        }
+                }
+        }
         while(1){
                 memset(&msg, 0, sizeof(struct message));
                 printf("thread %d : %d\n", idx, test++);
-                
-                res = recv_message(idx, &msg, CENTRAL_CONTROL);
+                // TODO: init message
+                res = recv_message(idx, &msg, ROBOT);
                 if(res == 0){
                         moveRobot(robots, idx, num_robots, &msg);
                         send_message(idx, &msg, ROBOT);
@@ -133,7 +147,7 @@ int initialize_robots(payload *payloads) {
         for (int i = 0; i < num_robots; i++) {
                 robot_idxs[i] = i;
                 snprintf(rnames, 3, "R%d", i + 1);
-                setRobot(&robots[i], rnames, ROW_W, COL_W, payloads[i].current, payloads[i].required);
+                setRobot(&robots[i], rnames, ROW_W, COL_W, payloads[i].required, payloads[i].current);
                 threads[i] = thread_create(rnames, 0, &test_thread, &robot_idxs[i]); // task 책임은 로봇한테 있다
                 if (threads[i] == TID_ERROR) {
                         printf("Thread creation failed\n");

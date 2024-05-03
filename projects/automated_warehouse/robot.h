@@ -19,6 +19,7 @@ struct robot {
     int col;
     int required_payload;
     int current_payload;
+    int nop_count;
 };
 
 void setRobot(struct robot* _robot, const char* name, int row, int col, int required_payload, int current_payload);
