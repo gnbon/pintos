@@ -72,16 +72,6 @@ void test_thread(void* aux){
         msg.cmd = CMD_NOP;
         moveRobot(robots, idx, num_robots, &msg);
         send_message(idx, &msg, ROBOT);
-        for (int i = 0; i < idx * 5; i++) {
-                if (i != idx) {
-                        res = recv_message(idx, &msg, ROBOT);
-                                if(res == 0){
-                                msg.cmd = CMD_NOP;
-                                moveRobot(robots, idx, num_robots, &msg);
-                                send_message(idx, &msg, ROBOT);
-                        }
-                }
-        }
         while(1){
                 memset(&msg, 0, sizeof(struct message));
                 printf("thread %d : %d\n", idx, test++);
