@@ -8,42 +8,42 @@
 typedef struct {
     int row;
     int col;
-} Point;
+} point;
 
 typedef struct {
-    Point data[MAX_QUEUE_SIZE];
+    point data[MAX_QUEUE_SIZE];
     int front;
     int rear;
 } queue;
 
-void initQueue(queue* queue) {
+void init_queue(queue* queue) {
     queue->front = 0;
     queue->rear = 0;
 }
 
-bool isQueueEmpty(queue* queue) {
+bool is_empty(queue* queue) {
     return queue->front == queue->rear;
 }
 
-bool isQueueFull(queue* queue) {
+bool is_full(queue* queue) {
     return (queue->rear + 1) % MAX_QUEUE_SIZE == queue->front;
 }
 
-void enqueue(queue* queue, Point point) {
-    if (isQueueFull(queue)) {
+void enqueue(queue* queue, point point) {
+    if (is_full(queue)) {
         return;
     }
     queue->rear = (queue->rear + 1) % MAX_QUEUE_SIZE;
     queue->data[queue->rear] = point;
 }
 
-Point dequeue(queue* queue) {
-    if (isQueueEmpty(queue)) {
-        Point emptyPoint = {-1, -1};
+point dequeue(queue* queue) {
+    if (is_empty(queue)) {
+        point emptyPoint = {-1, -1};
         return emptyPoint;
     }
     queue->front = (queue->front + 1) % MAX_QUEUE_SIZE;
-    Point point = queue->data[queue->front];
+    point point = queue->data[queue->front];
     return point;
 }
 
@@ -64,17 +64,17 @@ int find_path(struct robot* robots_info, int robot_idx) {
     int dir_col[] = {0, 0, -1, 1};
     
     queue queue;
-    initQueue(&queue);
+    init_queue(&queue);
     
     bool visited[ARR_ROW][ARR_COL] = {false};
-    Point prev[ARR_ROW][ARR_COL] = {0};
+    point prev[ARR_ROW][ARR_COL] = {0};
     
-    Point start = {current_row, current_col};
+    point start = {current_row, current_col};
     enqueue(&queue, start);
     visited[start.row][start.col] = true;
     
-    while (!isQueueEmpty(&queue)) {
-        Point current = dequeue(&queue);
+    while (!is_empty(&queue)) {
+        point current = dequeue(&queue);
         for (int i = 0; i < 4; i++) {
             int new_row = current.row + dir_row[i];
             int new_col = current.col + dir_col[i];
@@ -105,7 +105,7 @@ int find_path(struct robot* robots_info, int robot_idx) {
             }
             
             INFO("cnt", "enqueue row: %d, col: %d", new_row, new_col);
-            Point next = {new_row, new_col};
+            point next = {new_row, new_col};
             enqueue(&queue, next);
             visited[new_row][new_col] = true;
             prev[new_row][new_col] = current;
@@ -113,7 +113,7 @@ int find_path(struct robot* robots_info, int robot_idx) {
         }
     }
     
-    Point target;
+    point target;
     bool target_found = false;
     for (int i = 0; i < ARR_ROW; i++) {
         for (int j = 0; j < ARR_COL; j++) {
@@ -146,7 +146,6 @@ int find_path(struct robot* robots_info, int robot_idx) {
     while (prev[target.row][target.col].row != current_row || 
         prev[target.row][target.col].col != current_col) {
         target = prev[target.row][target.col];
-        // INFO("cnt", "target row: %d, col: %d", target.row, target.col);
     }
     
     robot->row = target.row;
@@ -154,7 +153,7 @@ int find_path(struct robot* robots_info, int robot_idx) {
     if (map_draw_default[target.row][target.col] == LOWER(required_payload)) {
         robot->current_payload = 1;
     }
-    WARN("cnt", "R%d move to row: %d, col: %d", robot_idx, target.row, target.col);
+    INFO("cnt", "R%d move to row: %d, col: %d", robot_idx, target.row, target.col);
 
     if (target.row == current_row - 1) {
         return CMD_UP;

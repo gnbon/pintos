@@ -1,6 +1,9 @@
 #ifndef _PROJECTS_PROJECT1_AW_MESSAGE_H__
 #define _PROJECTS_PROJECT1_AW_MESSAGE_H__
 
+#define UPPER(num) ((num >> 16) & 0xFFFF)
+#define LOWER(num) (num & 0xFFFF)
+
 enum command {
     /** do nothing */
     CMD_NOP = 0,
