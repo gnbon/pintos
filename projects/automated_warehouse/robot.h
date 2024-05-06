@@ -5,10 +5,13 @@
 
 #include "projects/automated_warehouse/aw_message.h"
 
-typedef struct {
-    char current; // 0 1 2
-    char required; // A B C
-} payload;
+#define UPPER(num) ((num >> 16) & 0xFFFF)
+#define LOWER(num) (num & 0xFFFF)
+
+typedef  struct  __attribute__ ((__packed__)) {
+    short req_load; // '0', '1', '2', ...
+    short req_dork; // 'A', 'B', 'C', ...
+} req_task;
 
 /**
  * A Structure representing robot

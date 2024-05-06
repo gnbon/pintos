@@ -7,3 +7,4 @@ projects/automated_warehouse_SRC += projects/automated_warehouse/aw_thread.c
 projects/automated_warehouse_SRC += projects/automated_warehouse/robot.c
 projects/automated_warehouse_SRC += projects/automated_warehouse/aw_message.c
 projects/automated_warehouse_SRC += projects/automated_warehouse/central_node.c
+projects/automated_warehouse_SRC += projects/automated_warehouse/aw_map.c
