@@ -112,14 +112,14 @@ int parse_args(char *task_list, req_task *tasks) {
 		}
 
 		tasks[count].req_load = (short)number;
-		tasks[count].req_dork = (short)letter;
+		tasks[count].req_dock = (short)letter;
 		count++;
 
 		token = strtok_r(NULL, ":", &saveptr);
 	}
 
 	for (int i = 0; i < count; i++) {
-		INFO("task", "robot %d: %c%c", i + 1, tasks[i].req_load, tasks[i].req_dork);
+		INFO("task", "robot %d: %c%c", i + 1, tasks[i].req_load, tasks[i].req_dock);
 	}
 
 	return 0;
@@ -137,7 +137,7 @@ int initialize_robots(req_task *tasks) {
 		robot_idxs[i] = i;
 		snprintf(rnames, 3, "R%d", i + 1);
 		// int required_payload = COMBINE(tasks[i].req_load, tasks[i].req_dork);
-		setRobot(&robots[i], rnames, ROW_W, COL_W, COMBINE(tasks[i].req_dork, tasks[i].req_load), PAYLOAD_UNLOAD);
+		setRobot(&robots[i], rnames, ROW_W, COL_W, COMBINE(tasks[i].req_dock, tasks[i].req_load), PAYLOAD_UNLOAD);
 		threads[i] = thread_create(rnames, 0, &test_thread, &robot_idxs[i]); // task 책임은 로봇한테 있다
 		if (threads[i] == TID_ERROR) {
 			printf("Thread creation failed\n");
@@ -155,7 +155,7 @@ int initialize_central_control_node(req_task *tasks) {
 
 	for (int i = 0; i < num_robots; i++) {
 		snprintf(rnames, 3, "R%d", i + 1);
-		setRobot(&robots_info[i], rnames, ROW_W, COL_W, COMBINE(tasks[i].req_dork, tasks[i].req_load), PAYLOAD_UNLOAD);
+		setRobot(&robots_info[i], rnames, ROW_W, COL_W, COMBINE(tasks[i].req_dock, tasks[i].req_load), PAYLOAD_UNLOAD);
 	}
 
 	tid_t* cnt_thread = thread_create("CNT", 0, &test_cnt, NULL);
