@@ -4,5 +4,5 @@
 #include "projects/automated_warehouse/aw_message.h"
 #include "projects/automated_warehouse/robot.h"
 
-int find_path(struct message* msg);
+int find_path(struct robot* robots_info, int robot_idx);
 #endif

@@ -2,16 +2,16 @@
 #define _PROJECTS_PROJECT1_AW_MESSAGE_H__
 
 enum command {
+    /** do nothing */
+    CMD_NOP = 0,
     /** move up */
-    CMD_UP = 0,
+    CMD_UP,
     /** move down */
     CMD_DOWN,
     /** move left */
     CMD_LEFT,
     /** move right */
     CMD_RIGHT,
-    /** do nothing */
-    CMD_NOP
 };
 
 /**

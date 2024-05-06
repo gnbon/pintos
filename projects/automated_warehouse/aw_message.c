@@ -70,7 +70,7 @@ int _send_message_to_central_control_node(int robotIdx, struct message* msg) {
         boxes_from_robots[robotIdx].msg.current_payload = msg->current_payload;
         boxes_from_robots[robotIdx].msg.required_payload = msg->required_payload;
         boxes_from_robots[robotIdx].dirtyBit = 1;
-        INFO("msg", "send robot2cnt row: %d, col: %d, current_payload: %c, required_payload: %c", boxes_from_robots[robotIdx].msg.row, boxes_from_robots[robotIdx].msg.row, boxes_from_robots[robotIdx].msg.current_payload, boxes_from_robots[robotIdx].msg.required_payload);
+        INFO("msg", "send robot2cnt row: %d, col: %d, current_payload: %d, required_payload: %x", boxes_from_robots[robotIdx].msg.row, boxes_from_robots[robotIdx].msg.row, boxes_from_robots[robotIdx].msg.current_payload, boxes_from_robots[robotIdx].msg.required_payload);
         return 0;
 }
 
@@ -112,7 +112,7 @@ int _recv_message_from_robot(int robotIdx, struct message* msg) {
         msg->required_payload = boxes_from_robots[robotIdx].msg.required_payload;
         boxes_from_robots[robotIdx].dirtyBit = 0;
 
-        INFO("msg", "recv robot2cnt row: %d, col: %d, current_payload: %c, required_payload: %c", msg->row, msg->col, msg->current_payload, msg->required_payload);
+        INFO("msg", "recv robot2cnt row: %d, col: %d, current_payload: %d, required_payload: %x", msg->row, msg->col, msg->current_payload, msg->required_payload);
         return 0;
 }
 
