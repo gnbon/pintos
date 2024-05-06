@@ -1,7 +1,6 @@
 #include "projects/automated_warehouse/central_node.h"
-#include "projects/automated_warehouse/aw_manager.h"
-#include "projects/automated_warehouse/aw_map.h"
 #include "projects/automated_warehouse/aw_debug.h"
+#include "projects/automated_warehouse/aw_manager.h"
 
 #define MAX_QUEUE_SIZE ((ROW_MAX+1) * (COL_MAX+1))
 
@@ -14,22 +13,22 @@ typedef struct {
     Point data[MAX_QUEUE_SIZE];
     int front;
     int rear;
-} queue;
+} Queue;
 
-void initQueue(queue* queue) {
+void initQueue(Queue* queue) {
     queue->front = 0;
     queue->rear = 0;
 }
 
-bool isQueueEmpty(queue* queue) {
+bool isQueueEmpty(Queue* queue) {
     return queue->front == queue->rear;
 }
 
-bool isQueueFull(queue* queue) {
+bool isQueueFull(Queue* queue) {
     return (queue->rear + 1) % MAX_QUEUE_SIZE == queue->front;
 }
 
-void enqueue(queue* queue, Point point) {
+void enqueue(Queue* queue, Point point) {
     if (isQueueFull(queue)) {
         return;
     }
@@ -37,7 +36,7 @@ void enqueue(queue* queue, Point point) {
     queue->data[queue->rear] = point;
 }
 
-Point dequeue(queue* queue) {
+Point dequeue(Queue* queue) {
     if (isQueueEmpty(queue)) {
         Point emptyPoint = {-1, -1};
         return emptyPoint;
@@ -47,97 +46,106 @@ Point dequeue(queue* queue) {
     return point;
 }
 
-int find_path(struct robot* robots_info, int robot_idx) {
-    struct robot* robot = &robots_info[robot_idx];
-    int current_row = robot->row;
-    int current_col = robot->col;
-    int required_payload = robot->required_payload;
-    int current_payload = robot->current_payload;
+bool c_isOutOfBound(int row, int col) {
+    return row < ROW_MIN || row > ROW_MAX || col < COL_MIN || col > COL_MAX;
+}
 
-    if (is_loaded(current_payload) && is_arrived(current_row, current_col, required_payload)) {
+bool c_isWall(int row, int col) {
+    return map_draw_default[row][col] == 'X';
+}
+
+bool c_isAnotherCurrentPayload(int row, int col, int current_payload) {
+    return map_draw_default[row][col] >= '0' && map_draw_default[row][col] <= '9' && 
+        map_draw_default[row][col] != current_payload;
+}
+
+bool c_isAnotherRequiredPayload(int row, int col, int current_payload) {
+    return map_draw_default[row][col] >= 'A' && map_draw_default[row][col] <= 'Z' && 
+        map_draw_default[row][col] != 'W' && map_draw_default[row][col] != 'S' && 
+        map_draw_default[row][col] != current_payload;
+}
+
+bool msg_is_loaded(struct message* msg) {
+    return msg->current_payload > msg->required_payload;
+}
+
+// int find_path(struct robot* robot) {
+int find_path(struct message* msg) {
+    INFO("cnt", "find_path row: %d, col: %d, current_payload: %c, required_payload: %c", msg->row, msg->col, msg->current_payload, msg->required_payload);
+    int row = msg->row;
+    int col = msg->col;
+    int current_payload = msg->current_payload;
+    int required_payload = msg->required_payload;
+    
+    if (msg_is_loaded(msg) && map_draw_default[row][col] == current_payload) {
             return CMD_NOP;
     }
     
-    INFO("cnt", "find_path row: %d, col: %d, required_payload: %x, current_payload: %d", current_row, current_col, required_payload, current_payload);
- 
-    int dir_row[] = {-1, 1, 0, 0};
-    int dir_col[] = {0, 0, -1, 1};
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
     
-    queue queue;
+    Queue queue;
     initQueue(&queue);
     
-    bool visited[ARR_ROW][ARR_COL] = {false};
-    Point prev[ARR_ROW][ARR_COL] = {0};
+    bool visited[ROW_MAX+1][COL_MAX+1] = {false};
+    Point prev[ROW_MAX+1][COL_MAX+1] = {0};
     
-    Point start = {current_row, current_col};
+    Point start = {row, col};
     enqueue(&queue, start);
     visited[start.row][start.col] = true;
     
     while (!isQueueEmpty(&queue)) {
         Point current = dequeue(&queue);
         for (int i = 0; i < 4; i++) {
-            int new_row = current.row + dir_row[i];
-            int new_col = current.col + dir_col[i];
-
-            if (is_out_of_bound(new_row, new_col)) {
-                INFO("cnt", "skip(is_out_of_bound) row: %d, col: %d", new_row, new_col);
+            int nr = current.row + dr[i];
+            int nc = current.col + dc[i];
+            
+            if (c_isOutOfBound(nr, nc)) {
+                INFO("cnt", "skip(isOutOfBound) row: %d, col: %d", nr, nc);
                 continue;
             }
 
-            if (is_wall(new_row, new_col)) {
-                INFO("cnt", "skip(is_wall) row: %d, col: %d", new_row, new_col);
+            if (c_isWall(nr, nc)) {
+                INFO("cnt", "skip(isWall) row: %d, col: %d", nr, nc);
+                continue;
+            }
+
+            if (visited[nr][nc]) {
+                INFO("cnt", "skip(visited) row: %d, col: %d", nr, nc);
+                continue;
+            }
+
+            if (c_isAnotherCurrentPayload(nr, nc, current_payload)) {
+                INFO("cnt", "skip(isAnotherCurrentPayload) row: %d, col: %d", nr, nc);
+                continue;
+            }
+
+            if (c_isAnotherRequiredPayload(nr, nc, current_payload)) {
+                INFO("cnt", "skip(isAnotherRequiredPayload) row: %d, col: %d", nr, nc);
                 continue;
             }
             
-            if (visited[new_row][new_col]) {
-                INFO("cnt", "skip(visited) row: %d, col: %d", new_row, new_col);
-                continue;
-            }
-
-            if (is_another_payload(new_row, new_col, required_payload, current_payload)) {
-                INFO("cnt", "skip(is_another_payload) row: %d, col: %d", new_row, new_col);
-                continue;
-            }
-
-            if (is_hit_robot(new_row, new_col, robots_info, robot_idx)) {
-                INFO("cnt", "skip(is_hit_robot) row: %d, col: %d", new_row, new_col);
-                continue;
-            }
-            
-            INFO("cnt", "enqueue row: %d, col: %d", new_row, new_col);
-            Point next = {new_row, new_col};
+            Point next = {nr, nc};
             enqueue(&queue, next);
-            visited[new_row][new_col] = true;
-            prev[new_row][new_col] = current;
+            INFO("cnt", "enqueue row: %d, col: %d", nr, nc);
+            visited[nr][nc] = true;
+            prev[nr][nc] = current;
         }
     }
     
     Point target;
     bool found = false;
-    for (int i = 0; i < ARR_ROW; i++) {
-        for (int j = 0; j < ARR_COL; j++) {
-            if (!visited[i][j]) {
-                continue;
-            }
-            if (is_loaded(current_payload)) {
-                if (map_draw_default[i][j] == UPPER(required_payload)) {
-                    target.row = i;
-                    target.col = j;
-                    found = true;
-                    break;
-                }
-            } 
-            else {
-                if (map_draw_default[i][j] == LOWER(required_payload)) {
-                    target.row = i;
-                    target.col = j;
-                    found = true;
-                    break;
-                } 
-            }
-            if (found) {
+    for (int i = 0; i < ROW_MAX+1; i++) {
+        for (int j = 0; j < COL_MAX+1; j++) {
+            if (visited[i][j] && map_draw_default[i][j] == current_payload) {
+                target.row = i;
+                target.col = j;
+                found = true;
                 break;
             }
+        }
+        if (found) {
+            break;
         }
     }
 
@@ -145,24 +153,18 @@ int find_path(struct robot* robots_info, int robot_idx) {
         return CMD_NOP;
     }
 
-    while (prev[target.row][target.col].row != current_row || 
-        prev[target.row][target.col].col != current_col) {
+    while (prev[target.row][target.col].row != row || 
+        prev[target.row][target.col].col != col) {
         target = prev[target.row][target.col];
     }
-    robot->row = target.row;
-    robot->col = target.col;
-    if (map_draw_default[target.row][target.col] == LOWER(required_payload)) {
-        robot->current_payload = 1;
-    }
-    WARN("cnt", "R%d move to row: %d, col: %d", robot_idx, target.row, target.col);
 
-    if (target.row == current_row - 1) {
+    if (target.row == row - 1) {
         return CMD_UP;
-    } else if (target.row == current_row + 1) {
+    } else if (target.row == row + 1) {
         return CMD_DOWN;
-    } else if (target.col == current_col - 1) {
+    } else if (target.col == col - 1) {
         return CMD_LEFT;
-    } else if (target.col == current_col + 1) {
+    } else if (target.col == col + 1) {
         return CMD_RIGHT;
     }
     return CMD_NOP;
